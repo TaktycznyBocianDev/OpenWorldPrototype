@@ -11,22 +11,66 @@ public class DayNightCycle : MonoBehaviour
     public DayTimes currentDayPart;
     [Space(5)]
     [Header("How many days pass?")]
-    public int daysCounter = 1;
+    public int daysCounter;
     [Space(5)]
     [Header("What is current hour on a clock?")]
     [SerializeField] int dayCurrentTime;
-    [Header("How much hours make a day? (ONLY DAY, NO DAY+NIGHT!)")]
+    [Header("How much hours make a day? (DAY+NIGHT)")]
     [SerializeField] int fullDayTime;
+    public int GetDayTime(SunSpin sunSpinComponent) { return fullDayTime; } //only sun could have this         
     [Header("Set to 1 means that 1h in game is 1s in real world")]
     [SerializeField] float hourScale;
-
+    public float GetHourScale(SunSpin sunSpinComponent) { return hourScale; } //only sun could have this 
 
     private void Start()
     {
         //When we start, we want to set everything and start our clock
         SetTime(0, DayTimes.MORNING);
-        StartCoroutine(Time());
+        StartCoroutine(TimeCounter());
     }
+
+    IEnumerator TimeCounter()
+    {
+        while (true)
+        {
+            dayCurrentTime += 1;
+            DayTimes actualDayTime = currentDayPart;
+
+            //Change current part of the day, if needed
+            if (dayCurrentTime >= 0 && dayCurrentTime <= fullDayTime/4)
+            {
+                currentDayPart = DayTimes.MORNING; //1 quarter of day...
+            }
+            if (dayCurrentTime > fullDayTime / 4 && dayCurrentTime <= fullDayTime/2)
+            {
+                currentDayPart = DayTimes.NOON; // ... 2 quarter...
+            }
+            if (dayCurrentTime > fullDayTime/2 && dayCurrentTime <= fullDayTime*0.75f)
+            {
+                currentDayPart = DayTimes.EVENING; // ... 3 quarter...
+            }
+            if (dayCurrentTime > fullDayTime * 0.75f && dayCurrentTime <= fullDayTime)
+            {
+                currentDayPart = DayTimes.MIDNIGHT; // ... 4 quarter...
+            }
+
+            if (actualDayTime != currentDayPart)
+            {
+                //Tell about this!
+            }
+
+            if (dayCurrentTime >= fullDayTime)
+            {
+                dayCurrentTime = 0;
+                daysCounter++;
+            }
+
+            //Presentate();
+
+            yield return new WaitForSeconds(hourScale);
+        }
+    }
+
 
     public void SetTime(int wantedTime, DayTimes wantedDayTime)
     {
@@ -34,47 +78,7 @@ public class DayNightCycle : MonoBehaviour
         currentDayPart = wantedDayTime;
     }
 
-    IEnumerator Time()
-    {
-        while (true)
-        {
-            timeCount();
-            DayTimes actualDayTime = currentDayPart;
-
-            //Change current part of the day, if needed
-            if (dayCurrentTime >= 0 && dayCurrentTime <= fullDayTime/2)
-            {
-                currentDayPart = DayTimes.MORNING;
-            }
-            if (dayCurrentTime > fullDayTime / 2 && dayCurrentTime <= fullDayTime)
-            {
-                currentDayPart = DayTimes.NOON;
-            }
-            if (dayCurrentTime > fullDayTime && dayCurrentTime <= fullDayTime*1.5)
-            {
-                currentDayPart = DayTimes.EVENING;
-            }
-            if (dayCurrentTime > fullDayTime * 1.5 && dayCurrentTime <= fullDayTime*2)
-            {
-                currentDayPart = DayTimes.MIDNIGHT;
-            }
-
-            if (dayCurrentTime >= fullDayTime*2)
-            {
-                dayCurrentTime = 0;
-                daysCounter++;
-            }
-            Presentate();
-            yield return new WaitForSeconds(hourScale);
-        }
-    }
-
-    void timeCount()
-    {
-        dayCurrentTime += 1;
-    }
-
-     void Presentate()
+    void Presentate()
     {
         Debug.Log("-------------------------------------");
         Debug.Log("Current time is: " + UnityEngine.Time.time);
